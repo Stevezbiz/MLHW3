@@ -55,13 +55,21 @@ class AlexNet(nn.Module):
             nn.Linear(4096, num_domains),
         )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, alpha=None) -> torch.Tensor:
         x = self.features(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
-        y = self.classifier(x)
-        z = self.domain(x)
-        return y, z
+        # If we pass alpha, we can assume we are training the discriminator
+        if alpha is not None:
+            # gradient reversal layer (backward gradients will be reversed)
+            reverse_feature = ReverseLayerF.apply(x, alpha)
+            discriminator_output = self.domain(reverse_features)
+            return discriminator_output
+        # If we don't pass alpha, we assume we are training with supervision
+        else:
+            # do something else
+            class_outputs = self.classifier(x)
+            return class_outputs
 
 
 def alexnet(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> AlexNet:
@@ -75,4 +83,5 @@ def alexnet(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> A
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['alexnet'], progress=progress)
         model.load_state_dict(state_dict, strict=False)
+        model.domain.weight.copy_(model.classifier.weight)
     return model
