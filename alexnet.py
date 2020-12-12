@@ -99,5 +99,5 @@ def alexnet(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> A
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['alexnet'], progress=progress)
         model.load_state_dict(state_dict, strict=False)
-        model.domain.weight.copy_(model.classifier.weight)
+        model.domain.weights.copy_(model.classifier.weights)
     return model
