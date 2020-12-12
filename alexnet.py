@@ -99,5 +99,8 @@ def alexnet(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> A
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['alexnet'], progress=progress)
         model.load_state_dict(state_dict, strict=False)
-        model.domain.weights.copy_(model.classifier.weights)
+        with torch.no_grad():
+            model.domain[1].weight.copy_(model.classifier[1].weight)
+            model.domain[4].weight.copy_(model.classifier[4].weight)
+            model.domain[6].weight.copy_(model.classifier[6].weight)
     return model
